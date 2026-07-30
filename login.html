@@ -1,1 +1,77 @@
-
+<!-- templates/login.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reporter — Login</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0f0f13;
+    color: #e0e0e0;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+  }
+  .card {
+    background: #1a1a24;
+    border: 1px solid #2a2a3a;
+    border-radius: 12px;
+    padding: 40px;
+    width: 100%;
+    max-width: 380px;
+  }
+  h1 { font-size: 1.4rem; margin-bottom: 8px; color: #fff; }
+  p.sub { font-size: 0.85rem; color: #666; margin-bottom: 28px; }
+  label { display: block; font-size: 0.8rem; color: #888; margin-bottom: 6px; }
+  input[type=password] {
+    width: 100%;
+    background: #0f0f13;
+    border: 1px solid #2a2a3a;
+    border-radius: 8px;
+    color: #e0e0e0;
+    padding: 10px 14px;
+    font-size: 0.95rem;
+    outline: none;
+    margin-bottom: 16px;
+  }
+  input[type=password]:focus { border-color: #5865f2; }
+  button {
+    width: 100%;
+    background: #5865f2;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 11px;
+    font-size: 0.95rem;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  button:hover { background: #4752c4; }
+  .error {
+    background: #2d1a1a;
+    border: 1px solid #5a2020;
+    border-radius: 8px;
+    color: #e06060;
+    padding: 10px 14px;
+    font-size: 0.85rem;
+    margin-bottom: 16px;
+  }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>Condo Reporter</h1>
+  <p class="sub">Private access only</p>
+  {% if error %}<div class="error">{{ error }}</div>{% endif %}
+  <form method="POST">
+    <label>Password</label>
+    <input type="password" name="password" autofocus placeholder="Enter password">
+    <button type="submit">Enter</button>
+  </form>
+</div>
+</body>
+</html>
