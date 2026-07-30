@@ -1,7 +1,5 @@
-# --- app.py ---
 import asyncio
 import os
-import json
 from functools import wraps
 from flask import (
     Flask, render_template, request,
@@ -72,13 +70,13 @@ def api_report():
     if not place_ids:
         return jsonify({"error": "No valid place IDs found."}), 400
 
+    raw_proxies_joined = "".join(raw_proxies.splitlines())
+    proxy_entries = raw_proxies_joined.split("http://")
     proxies = []
-    for line in raw_proxies.splitlines():
-        line = line.strip()
-        if line:
-            if not line.startswith("http"):
-                line = f"http://{line}"
-            proxies.append(line)
+    for entry in proxy_entries:
+        entry = entry.strip()
+        if entry:
+            proxies.append(f"http://{entry}")
 
     try:
         results = asyncio.run(
