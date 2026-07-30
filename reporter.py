@@ -1,4 +1,3 @@
-# --- reporter.py ---
 import asyncio
 import aiohttp
 import random
@@ -28,7 +27,7 @@ class RobloxSession:
 
 async def fetch_csrf(session: aiohttp.ClientSession, cookie: str, proxy: Optional[str]) -> str:
     headers = {"Cookie": f".ROBLOSECURITY={cookie}"}
-    async with session.post(CSRF_URL, headers=headers, proxy=proxy) as resp:
+    async with session.post(CSRF_URL, headers=headers, proxy=proxy, ssl=False) as resp:
         token = resp.headers.get("x-csrf-token")
         if not token:
             raise RuntimeError("CSRF fetch failed — cookie invalid or expired")
@@ -44,7 +43,7 @@ async def authenticate(
         "Cookie": f".ROBLOSECURITY={rob.cookie}",
         "x-csrf-token": rob.csrf_token
     }
-    async with session.get(AUTH_URL, headers=headers, proxy=proxy) as resp:
+    async with session.get(AUTH_URL, headers=headers, proxy=proxy, ssl=False) as resp:
         if resp.status != 200:
             raise RuntimeError(f"Auth failed — HTTP {resp.status}")
         data = await resp.json()
@@ -60,7 +59,7 @@ async def resolve_universe(
 ) -> int:
     url = UNIVERSE_URL.format(place_id=place_id)
     headers = {"Cookie": f".ROBLOSECURITY={cookie}"}
-    async with session.get(url, headers=headers, proxy=proxy) as resp:
+    async with session.get(url, headers=headers, proxy=proxy, ssl=False) as resp:
         if resp.status != 200:
             raise RuntimeError(f"Universe resolve failed — HTTP {resp.status}")
         data = await resp.json()
@@ -75,7 +74,7 @@ async def fetch_game(
 ) -> dict:
     url = GAME_DETAIL_URL.format(universe_id=universe_id)
     headers = {"Cookie": f".ROBLOSECURITY={cookie}"}
-    async with session.get(url, headers=headers, proxy=proxy) as resp:
+    async with session.get(url, headers=headers, proxy=proxy, ssl=False) as resp:
         if resp.status != 200:
             raise RuntimeError(f"Game detail fetch failed — HTTP {resp.status}")
         data = await resp.json()
@@ -106,7 +105,7 @@ async def submit_report(
         "reporterUserId": rob.user_id
     }
     async with session.post(
-        REPORT_URL, headers=headers, json=payload, proxy=proxy
+        REPORT_URL, headers=headers, json=payload, proxy=proxy, ssl=False
     ) as resp:
         return resp.status in (200, 201, 204)
 
@@ -119,7 +118,7 @@ async def report_condo_games_with_proxy(
     proxy_pool = proxies if proxies else [None]
     results = []
 
-    connector = aiohttp.TCPConnector(ssl=False, limit=8)
+    connector = aiohttp.TCPConnector(ssl=False, limit=8, force_close=True)
     async with aiohttp.ClientSession(connector=connector) as http:
         proxy = random.choice(proxy_pool)
 
