@@ -1,1 +1,248 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Condo Reporter</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0f0f13;
+    color: #e0e0e0;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    min-height: 100vh;
+    padding: 32px 16px;
+  }
+  .wrap { max-width: 820px; margin: 0 auto; }
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 32px;
+  }
+  header h1 { font-size: 1.3rem; color: #fff; }
+  header a {
+    font-size: 0.8rem;
+    color: #555;
+    text-decoration: none;
+  }
+  header a:hover { color: #e0e0e0; }
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  @media(max-width: 600px) { .grid { grid-template-columns: 1fr; } }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  label { font-size: 0.78rem; color: #888; letter-spacing: 0.04em; text-transform: uppercase; }
+  textarea {
+    background: #1a1a24;
+    border: 1px solid #2a2a3a;
+    border-radius: 8px;
+    color: #e0e0e0;
+    padding: 12px 14px;
+    font-size: 0.88rem;
+    font-family: 'Cascadia Code', 'Fira Code', monospace;
+    resize: vertical;
+    outline: none;
+    line-height: 1.5;
+  }
+  textarea:focus { border-color: #5865f2; }
+  #cookie { min-height: 72px; }
+  #place_ids { min-height: 140px; }
+  #proxies { min-height: 140px; }
+  .hint { font-size: 0.75rem; color: #555; }
+  .actions { display: flex; gap: 12px; margin-bottom: 24px; }
+  #btn-report {
+    background: #5865f2;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 11px 28px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  #btn-report:hover { background: #4752c4; }
+  #btn-report:disabled { background: #333; color: #666; cursor: not-allowed; }
+  #btn-clear {
+    background: transparent;
+    color: #666;
+    border: 1px solid #2a2a3a;
+    border-radius: 8px;
+    padding: 11px 20px;
+    font-size: 0.88rem;
+    cursor: pointer;
+  }
+  #btn-clear:hover { color: #e0e0e0; border-color: #555; }
+  #status {
+    font-size: 0.85rem;
+    color: #888;
+    margin-bottom: 16px;
+    min-height: 20px;
+  }
+  #status.running { color: #f0b429; }
+  #status.done { color: #3dd68c; }
+  #status.err { color: #e06060; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.83rem;
+  }
+  thead th {
+    text-align: left;
+    padding: 10px 12px;
+    color: #555;
+    font-weight: 500;
+    border-bottom: 1px solid #2a2a3a;
+    text-transform: uppercase;
+    font-size: 0.72rem;
+    letter-spacing: 0.05em;
+  }
+  tbody tr { border-bottom: 1px solid #1e1e2a; }
+  tbody tr:hover { background: #1a1a24; }
+  tbody td { padding: 10px 12px; color: #ccc; vertical-align: top; }
+  .badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  .badge-reported { background: #1a3a2a; color: #3dd68c; }
+  .badge-failed   { background: #3a1a1a; color: #e06060; }
+  .badge-error    { background: #3a2a1a; color: #f0b429; }
+  .badge-pending  { background: #1a1a2a; color: #888; }
+  .empty { color: #444; font-size: 0.85rem; padding: 24px 0; text-align: center; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Condo Reporter</h1>
+    <a href="/logout">Logout</a>
+  </header>
 
+  <div class="grid">
+    <div class="field" style="grid-column: 1 / -1;">
+      <label>.ROBLOSECURITY Cookie</label>
+      <textarea id="cookie" placeholder="Paste your .ROBLOSECURITY cookie value here"></textarea>
+      <span class="hint">Browser devtools → Application → Cookies → www.roblox.com → .ROBLOSECURITY</span>
+    </div>
+    <div class="field">
+      <label>Place IDs</label>
+      <textarea id="place_ids" placeholder="One place ID per line&#10;123456789&#10;987654321"></textarea>
+      <span class="hint">Numeric ID from roblox.com/games/&lt;ID&gt;</span>
+    </div>
+    <div class="field">
+      <label>Proxies (optional)</label>
+      <textarea id="proxies" placeholder="One proxy per line&#10;http://ip:port&#10;ip:port"></textarea>
+      <span class="hint">HTTP proxies. Leave blank to use direct connection.</span>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button id="btn-report">Submit Reports</button>
+    <button id="btn-clear">Clear Results</button>
+  </div>
+
+  <div id="status"></div>
+
+  <table id="results-table">
+    <thead>
+      <tr>
+        <th>Place ID</th>
+        <th>Game Name</th>
+        <th>Creator</th>
+        <th>Proxy Used</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody id="results-body">
+      <tr><td colspan="5" class="empty">No reports submitted yet.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<script>
+  const btn = document.getElementById('btn-report');
+  const clearBtn = document.getElementById('btn-clear');
+  const statusEl = document.getElementById('status');
+  const tbody = document.getElementById('results-body');
+
+  function badgeHTML(status) {
+    const map = {
+      reported: ['badge-reported', 'Reported'],
+      failed:   ['badge-failed',   'Failed'],
+      error:    ['badge-error',    'Error'],
+      pending:  ['badge-pending',  'Pending'],
+    };
+    const [cls, label] = map[status] || ['badge-pending', status];
+    return `<span class="badge ${cls}">${label}</span>`;
+  }
+
+  function renderResults(results) {
+    if (!results.length) {
+      tbody.innerHTML = '<tr><td colspan="5" class="empty">No results.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = results.map(r => `
+      <tr>
+        <td>${r.place_id}</td>
+        <td>${r.game_name}${r.error ? `<br><span style="color:#e06060;font-size:0.75rem">${r.error}</span>` : ''}</td>
+        <td>${r.creator}</td>
+        <td style="font-family:monospace;font-size:0.78rem">${r.proxy_used}</td>
+        <td>${badgeHTML(r.status)}</td>
+      </tr>
+    `).join('');
+  }
+
+  btn.addEventListener('click', async () => {
+    const cookie = document.getElementById('cookie').value.trim();
+    const place_ids = document.getElementById('place_ids').value.trim();
+    const proxies = document.getElementById('proxies').value.trim();
+
+    if (!cookie) { statusEl.textContent = 'Cookie is required.'; statusEl.className = 'err'; return; }
+    if (!place_ids) { statusEl.textContent = 'At least one place ID is required.'; statusEl.className = 'err'; return; }
+
+    btn.disabled = true;
+    statusEl.textContent = 'Submitting reports...';
+    statusEl.className = 'running';
+    tbody.innerHTML = '<tr><td colspan="5" class="empty">Running...</td></tr>';
+
+    try {
+      const resp = await fetch('/api/report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cookie, place_ids, proxies })
+      });
+      const data = await resp.json();
+
+      if (data.error) {
+        statusEl.textContent = `Error: ${data.error}`;
+        statusEl.className = 'err';
+        tbody.innerHTML = '<tr><td colspan="5" class="empty">Error occurred.</td></tr>';
+      } else {
+        const reported = data.results.filter(r => r.status === 'reported').length;
+        statusEl.textContent = `Done — ${reported}/${data.results.length} reports submitted successfully.`;
+        statusEl.className = 'done';
+        renderResults(data.results);
+      }
+    } catch (e) {
+      statusEl.textContent = `Network error: ${e.message}`;
+      statusEl.className = 'err';
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  clearBtn.addEventListener('click', () => {
+    tbody.innerHTML = '<tr><td colspan="5" class="empty">No reports submitted yet.</td></tr>';
+    statusEl.textContent = '';
+    statusEl.className = '';
+  });
+</script>
+</body>
+</html>
